@@ -20,17 +20,31 @@ function showAlert(message, type = 'success') {
 async function loadMahasiswa(keyword = '') {
 
     // tampilkan indikator loading
-    tabelBody.innerHTML = ``;
+    tabelBody.innerHTML = `
+    <tr> 
+    <td colspan="8" styles="text-align: center; padding:
+    20px; color: var(--text-muted);" > 
+        Memuat data dari server...
+        </td>
+        </tr>
+    `;
 
     try {
 
-        //Percobaan 6-1 Langkah 4 susun url request
-        
+          //Percobaan 6-1 Langkah 4 susun url request
+        const url = keyword ?
+        `${API_URL}?search=${encodeURIComponent(keyword)}` : API_URL;
         //Percobaan 6-1 Langkah 4 kirim request
-        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         //Percobaan 6-1 Langkah 4 kirim ekstrak json 
+        const result = await response.json();
+        if (result.status === 'success') {
+            renderTable(result.data, keyword);
+        } else {
+            showAlert(result.message, 'danger');
+        }
 
-      
     } catch (error) {
         tabelBody.innerHTML = `
             <tr>
@@ -152,14 +166,25 @@ if (formEdit) {
 if (formTambah) {
     formTambah.addEventListener('submit', async function (event) {
         // Percobaan 6-2 Langkah 3 
+        event.preventDefault();
 
         const dataMahasiswa = {
             // Percobaan 6-2 Langkah 4
-
+            npm: document.getElementById('npm').value.trim(),
+            nama: document.getElementById('name').value.trim(),
+            program_studi: document.getElementById('program_studi').value,
+            angkatan: parseInt(document.getElementById('angkatan').value, 10),
+            email: document.getElementById('email').value.trim()
         };
 
         try {
             // Percobaan 6-2 Langkah 5
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dataMahasiswa)
+            });
+            const result = await response.json();
             
             if (response.ok && result.status === 'success') {
                 showAlert(result.message, 'success');
